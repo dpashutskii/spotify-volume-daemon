@@ -56,7 +56,7 @@ async function main() {
   console.log('  https://developer.spotify.com/dashboard\n');
   console.log('Steps:');
   console.log('  1. Click "Create app"');
-  console.log('  2. Set Redirect URI to: http://localhost:8888/callback');
+  console.log('  2. Set Redirect URI to: http://127.0.0.1:8888/callback');
   console.log('  3. Copy Client ID and Client Secret below\n');
 
   const clientId = (await ask('Client ID:     ')).trim();
@@ -70,7 +70,7 @@ async function main() {
 
   rl.close();
 
-  const redirectUri = 'http://localhost:8888/callback';
+  const redirectUri = 'http://127.0.0.1:8888/callback';
   const scope = 'user-read-playback-state user-modify-playback-state';
 
   const authUrl =
@@ -126,11 +126,20 @@ async function main() {
 
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 
-  console.log(`\n✅ Config saved to ${CONFIG_FILE}`);
+  const daemonSrc = path.join(__dirname, 'daemon.js');
+  const daemonDest = path.join(CONFIG_DIR, 'daemon.js');
+  if (fs.existsSync(daemonSrc)) {
+    fs.copyFileSync(daemonSrc, daemonDest);
+    console.log(`\n✅ Config saved to ${CONFIG_FILE}`);
+    console.log(`✅ daemon.js copied to ${daemonDest}`);
+  } else {
+    console.log(`\n✅ Config saved to ${CONFIG_FILE}`);
+    console.log(`⚠️  daemon.js not found next to setup.js — copy it to ${daemonDest} manually`);
+  }
+
   console.log('\nNext steps:');
-  console.log(`  1. Copy daemon.js to ${CONFIG_DIR}/daemon.js`);
-  console.log(`  2. Add raycast-spotify-daemon.sh to your Raycast scripts folder`);
-  console.log(`  3. Run the Raycast command to start the daemon\n`);
+  console.log(`  1. Add raycast-spotify-daemon.sh to your Raycast scripts folder`);
+  console.log(`  2. Run the Raycast command to start the daemon\n`);
 }
 
 main().catch((err) => {
